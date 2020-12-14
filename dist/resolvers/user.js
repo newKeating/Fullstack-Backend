@@ -68,24 +68,35 @@ UserResponse = __decorate([
     type_graphql_1.ObjectType()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    register(options, { em }) {
+    me({ em, req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!req.session.userId) {
+                return null;
+            }
+            const user = yield em.findOne(User_1.User, { id: req.session.userId });
+            return user;
+        });
+    }
+    register(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (options.username.length <= 2) {
                 return {
-                    errors: [{
+                    errors: [
+                        {
                             field: "username",
-                            message: "length must be greater than 2 letters"
-                        }]
+                            message: "length must be greater than 2 letters",
+                        },
+                    ],
                 };
             }
             if (options.password.length <= 3) {
                 return {
                     errors: [
                         {
-                            field: 'password',
-                            message: "Password must be greater than 3 letters"
-                        }
-                    ]
+                            field: "password",
+                            message: "Password must be greater than 3 letters",
+                        },
+                    ],
                 };
             }
             const hashedPassword = yield argon2_1.default.hash(options.password);
@@ -102,24 +113,27 @@ let UserResolver = class UserResolver {
                         errors: [
                             {
                                 field: "username",
-                                message: "username already taken"
-                            }
-                        ]
+                                message: "username already taken",
+                            },
+                        ],
                     };
                 }
             }
+            req.session.userId = user.id;
             return { user };
         });
     }
-    login(options, { em }) {
+    login(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield em.findOne(User_1.User, { username: options.username });
             if (!user) {
                 return {
-                    errors: [{
-                            field: 'username',
-                            message: "that username doesn't exist"
-                        }]
+                    errors: [
+                        {
+                            field: "username",
+                            message: "that username doesn't exist",
+                        },
+                    ],
                 };
             }
             const valid = yield argon2_1.default.verify(user.password, options.password);
@@ -128,15 +142,23 @@ let UserResolver = class UserResolver {
                     errors: [
                         {
                             field: "password",
-                            message: "incorrect password"
-                        }
-                    ]
+                            message: "incorrect password",
+                        },
+                    ],
                 };
             }
+            req.session.userId = user.id;
             return { user };
         });
     }
 };
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "me", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse),
     __param(0, type_graphql_1.Arg("options")),
