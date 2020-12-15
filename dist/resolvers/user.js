@@ -89,12 +89,12 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            if (options.password.length <= 3) {
+            if (options.password.length <= 2) {
                 return {
                     errors: [
                         {
                             field: "password",
-                            message: "Password must be greater than 3 letters",
+                            message: "Password must be greater than 2 letters",
                         },
                     ],
                 };

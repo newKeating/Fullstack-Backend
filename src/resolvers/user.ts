@@ -11,7 +11,6 @@ import {
 import { MyContext } from "../types";
 import { User } from "../entities/User";
 import argon2 from "argon2";
-import session from "express-session";
 
 @InputType()
 class UsernamePasswordInput {
@@ -69,12 +68,12 @@ export class UserResolver {
       };
     }
 
-    if (options.password.length <= 3) {
+    if (options.password.length <= 2) {
       return {
         errors: [
           {
             field: "password",
-            message: "Password must be greater than 3 letters",
+            message: "Password must be greater than 2 letters",
           },
         ],
       };
