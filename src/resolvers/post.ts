@@ -1,18 +1,18 @@
 import {
   Arg,
+  Ctx,
+  Field,
+  InputType,
   Int,
   Mutation,
   Query,
   Resolver,
-  InputType,
-  Field,
-  Ctx,
   UseMiddleware,
 } from "type-graphql";
+import { getConnection } from "typeorm";
 import { Post } from "../entities/Post";
-import session from "express-session";
-import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
+import { MyContext } from "../types";
 
 @InputType()
 class PostInput {
@@ -27,9 +27,23 @@ class PostInput {
 export class PostResolver {
   @Query(() => [Post])
   // posts(@Ctx() ctx: MyContext): Promise<Post[]> {
-  posts(): Promise<Post[]> {
+  posts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string
+  ): Promise<Post[]> {
     // return ctx.em.find(Post, {});
-    return Post.find();
+    const realLimit = Math.min(50, limit);
+    const qb = getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimit);
+
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+    }
+
+    return qb.getMany();
   }
 
   @Query(() => Post, { nullable: true })
@@ -51,6 +65,7 @@ export class PostResolver {
     // await em.persistAndFlush(post);
     // return post;
     return Post.create({ ...input, creatorId: req.session.userId }).save();
+    // return Post.create({ ...input }).save();
   }
 
   @Mutation(() => Post, { nullable: true })
