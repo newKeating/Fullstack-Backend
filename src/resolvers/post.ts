@@ -28,7 +28,7 @@ export class PostResolver {
   @Query(() => [Post])
   // posts(@Ctx() ctx: MyContext): Promise<Post[]> {
   posts(
-    @Arg("limit") limit: number,
+    @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string
   ): Promise<Post[]> {
     // return ctx.em.find(Post, {});
